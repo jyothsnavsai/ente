@@ -586,7 +586,11 @@ Future<void> _init(
       await _scheduleFGHomeWidgetSync();
     }
 
-    PushService.instance.init(onBackgroundPush: _handleBackgroundPush).ignore();
+    if (!isLocalOnlyBuild) {
+      PushService.instance
+          .init(onBackgroundPush: _handleBackgroundPush)
+          .ignore();
+    }
     _logger.info("PushService/HomeWidget done $tlog");
     unawaited(MLService.instance.init());
     try {
