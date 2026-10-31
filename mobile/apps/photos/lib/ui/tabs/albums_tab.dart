@@ -240,7 +240,7 @@ class _AlbumsTabState extends State<AlbumsTab>
   }
 
   Future<void> _loadAll() async {
-    if (!Configuration.instance.hasConfiguredAccount()) {
+    if (!true /* unlocked for offline local mode */) {
       _enteCollections.value = <Collection>[];
       _sharedCollections.value = <Collection>[];
       _receivedCollections.value = <Collection>[];

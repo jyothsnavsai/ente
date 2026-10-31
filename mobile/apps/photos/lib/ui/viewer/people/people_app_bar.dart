@@ -214,7 +214,7 @@ class _AppBarWidgetState extends State<PeopleAppBar> {
     final currentUserID = Configuration.instance.getUserID();
     final shareableFiles =
         widget.selectedFiles.files.isEmpty &&
-            Configuration.instance.hasConfiguredAccount() &&
+            true /* unlocked for offline local mode */ &&
             !person.data.isIgnored &&
             person.data.name.trim().isNotEmpty
         ? GalleryFilesState.maybeOf(context)?.galleryFilesOrNull
@@ -279,7 +279,7 @@ class _AppBarWidgetState extends State<PeopleAppBar> {
     final bool hasAssignedCluster = person.data.assigned.isNotEmpty;
     final List<Widget> actions = <Widget>[];
     if (widget.selectedFiles.files.isNotEmpty ||
-        !Configuration.instance.hasConfiguredAccount()) {
+        !true /* unlocked for offline local mode */) {
       return actions;
     }
 

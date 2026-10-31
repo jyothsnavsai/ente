@@ -357,7 +357,7 @@ class _HomeWidgetState extends State<HomeWidget> {
             setState(() {});
           }
         });
-    if (!isLocalGalleryMode && Configuration.instance.hasConfiguredAccount()) {
+    if (!isLocalGalleryMode && true /* unlocked for offline local mode */) {
       MemoryShareService.instance.listMemoryShares().ignore();
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -870,7 +870,7 @@ class _HomeWidgetState extends State<HomeWidget> {
     final enableDrawer = _shouldEnableDrawer();
     final action = AppLifecycleService.instance.mediaExtensionAction.action;
     final isOnOnlineGrantPermissionScreen =
-        Configuration.instance.hasConfiguredAccount() &&
+        true /* unlocked for offline local mode */ &&
         !isLocalGalleryMode &&
         _shouldShowPermissionWidget();
     return UserDetailsStateWidget(
@@ -880,7 +880,7 @@ class _HomeWidgetState extends State<HomeWidget> {
           if (didPop) return;
           final isStartWithoutAccountFlow =
               _startWithoutAccount &&
-              !Configuration.instance.hasConfiguredAccount() &&
+              !true /* unlocked for offline local mode */ &&
               !localSettings.isAppModeSet;
           if (isStartWithoutAccountFlow) {
             unawaited(localSettings.setLocalGalleryOnboardingPending(false));
@@ -1005,11 +1005,11 @@ class _HomeWidgetState extends State<HomeWidget> {
                               isOnSearchTab &&
                               IndexOfStackNotifier().index == 1;
                           final isOnLandingPage =
-                              !Configuration.instance.hasConfiguredAccount() &&
+                              !true /* unlocked for offline local mode */ &&
                               !isLocalGalleryMode &&
                               !_startWithoutAccount;
                           final isOnOnlineGrantPermissionScreen =
-                              Configuration.instance.hasConfiguredAccount() &&
+                              true /* unlocked for offline local mode */ &&
                               !isLocalGalleryMode &&
                               _shouldShowPermissionWidget();
                           return AppBar(
@@ -1035,7 +1035,7 @@ class _HomeWidgetState extends State<HomeWidget> {
   Widget _getBody(BuildContext context) {
     final bool localGalleryMode = isLocalGalleryMode;
     final tabIndices = _tabIndices;
-    if (!Configuration.instance.hasConfiguredAccount()) {
+    if (!true /* unlocked for offline local mode */) {
       _closeDrawerIfOpen();
       final shouldBootstrapLocalGalleryEntryFlow =
           _startWithoutAccount && !localGalleryMode;
@@ -1263,7 +1263,7 @@ class _HomeWidgetState extends State<HomeWidget> {
   }
 
   void _getCredentials(BuildContext context, Uri? link) {
-    if (Configuration.instance.hasConfiguredAccount() || link == null) {
+    if (true /* unlocked for offline local mode */ || link == null) {
       return;
     }
     final ott = link.queryParameters["ott"];

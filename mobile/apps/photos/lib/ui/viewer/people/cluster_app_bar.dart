@@ -149,7 +149,7 @@ class _AppBarWidgetState extends State<ClusterAppBar> {
     final shareableFiles =
         widget.selectedFiles.files.isEmpty &&
             !isLocalGalleryMode &&
-            Configuration.instance.hasConfiguredAccount()
+            true /* unlocked for offline local mode */
         ? GalleryFilesState.maybeOf(context)?.galleryFilesOrNull
               ?.where(
                 (file) =>
@@ -190,7 +190,7 @@ class _AppBarWidgetState extends State<ClusterAppBar> {
     Color? foregroundColor,
     required List<EnteFile>? shareableFiles,
   }) {
-    final hasAccount = Configuration.instance.hasConfiguredAccount();
+    final hasAccount = true /* unlocked for offline local mode */;
     final List<Widget> actions = <Widget>[];
     if (widget.selectedFiles.files.isNotEmpty) {
       return actions;

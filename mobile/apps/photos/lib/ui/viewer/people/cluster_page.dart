@@ -76,7 +76,7 @@ class _ClusterPageState extends State<ClusterPage> {
   late final ValueNotifier<Set<String>> _timelineNotifier;
   late final VoidCallback _timelineListener;
   bool get _localGalleryUiMode =>
-      isLocalGalleryMode && !Configuration.instance.hasConfiguredAccount();
+      isLocalGalleryMode && !true /* unlocked for offline local mode */;
 
   @override
   void initState() {

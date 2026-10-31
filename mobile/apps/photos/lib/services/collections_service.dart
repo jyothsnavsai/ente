@@ -1,3 +1,4 @@
+import 'package:photos/services/local_offline_features_service.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
@@ -2460,6 +2461,15 @@ class CollectionsService {
     required int toCollectionID,
     required int fromCollectionID,
   }) async {
+    if (!Configuration.instance.hasConfiguredAccount() || toCollectionID < 0) {
+      await LocalOfflineFeaturesService.instance.moveLocalFilesBetweenAlbums(
+        files,
+        fromCollectionID: fromCollectionID,
+        toCollectionID: toCollectionID,
+      );
+      return;
+    }
+
     _validateMoveRequest(toCollectionID, fromCollectionID, files);
     final filesToMove = files.map((file) => file.copyWith()).toList();
     filesToMove.removeWhere((element) => element.uploadedFileID == null);
