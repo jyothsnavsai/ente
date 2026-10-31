@@ -27,23 +27,14 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Install Rust target & tools
+      - name: Install Android Rust Targets
         run: |
           rustup target add armv7-linux-androideabi aarch64-linux-android x86_64-linux-android
-          cargo install cargo-chef --locked || true
-
-      - name: Generate Rust & Flutter Bridge Bindings
-        working-directory: mobile
-        run: |
-          # Run Ente's build tool to generate the missing frb_generated files
-          dart pub global activate flutter_rust_bridge_codegen
-          cd apps/photos
-          flutter pub get
-          dart run build_runner build --delete-conflicting-outputs
 
       - name: Build Release APK (Independent / F-Droid flavor)
         working-directory: mobile/apps/photos
         run: |
+          flutter pub get
           flutter build apk --release --flavor independent --no-tree-shake-icons
 
       - name: Upload Compiled APK for Download
