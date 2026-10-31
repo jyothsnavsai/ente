@@ -99,6 +99,10 @@ android {
             dimension "default"
             applicationIdSuffix ".independent"
         }
+        localOnly {
+            dimension "default"
+            applicationIdSuffix ".local"
+        }
         dev {
             dimension "default"
             applicationIdSuffix ".dev"

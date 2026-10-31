@@ -64,7 +64,8 @@ class _SettingsBody extends StatelessWidget {
     final colors = context.componentColors;
     final hasLoggedIn = Configuration.instance.isLoggedIn();
     final hasConfiguredAccount = Configuration.instance.hasConfiguredAccount();
-    final showLoginEntry = isLocalGalleryMode && !hasConfiguredAccount;
+    final showLoginEntry =
+        isLocalGalleryMode && !hasConfiguredAccount && !isLocalOnlyBuild;
 
     return AnimatedBuilder(
       animation: emailNotifier,

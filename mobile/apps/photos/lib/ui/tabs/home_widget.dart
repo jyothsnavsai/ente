@@ -119,7 +119,8 @@ class _HomeWidgetState extends State<HomeWidget> {
   bool _personSyncTriggered = false;
   bool _collectionsSyncTriggered = false;
   bool _isShowingChangeLog = false;
-  bool _startWithoutAccount = localSettings.isLocalGalleryOnboardingPending;
+  bool _startWithoutAccount =
+      localSettings.isLocalGalleryOnboardingPending || isLocalOnlyBuild;
   final isOnSearchTabNotifier = ValueNotifier<bool>(false);
   final ValueNotifier<bool> _isAlbumsSearchActiveNotifier = ValueNotifier<bool>(
     false,

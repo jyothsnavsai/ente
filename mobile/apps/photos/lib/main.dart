@@ -26,6 +26,7 @@ import "package:media_kit/media_kit.dart";
 import "package:package_info_plus/package_info_plus.dart";
 import 'package:path_provider/path_provider.dart';
 import 'package:photos/app.dart';
+import 'package:photos/app_mode.dart';
 import 'package:photos/core/configuration.dart';
 import 'package:photos/core/constants.dart';
 import 'package:photos/core/error-reporting/super_logging.dart';
@@ -40,6 +41,7 @@ import "package:photos/locale.dart";
 import 'package:photos/module/upload/service/file_uploader.dart';
 import 'package:photos/module/upload/service/local_file_update_service.dart';
 import "package:photos/service_locator.dart";
+import "package:photos/settings/local_settings.dart";
 import "package:photos/services/account/purchase_update_listener.dart";
 import "package:photos/services/account/user_service.dart";
 import 'package:photos/services/app_lifecycle_service.dart';
@@ -307,6 +309,9 @@ Future<void> _runMinimally(
     if (shouldStop?.call() ?? false) return;
     final PackageInfo packageInfo = await PackageInfo.fromPlatform();
     final SharedPreferences prefs = await SharedPreferences.getInstance();
+    if (isLocalOnlyPackage(packageInfo.packageName)) {
+      await LocalSettings(prefs).setAppMode(AppMode.localGallery);
+    }
     await _scheduleHeartBeat(prefs, true);
     await _ensureRustInitialized(via: 'workmanager:$taskId');
 
@@ -464,6 +469,9 @@ Future<void> _init(
     );
     final SharedPreferences preferences = await SharedPreferences.getInstance();
     final PackageInfo packageInfo = await PackageInfo.fromPlatform();
+    if (isLocalOnlyPackage(packageInfo.packageName)) {
+      await LocalSettings(preferences).setAppMode(AppMode.localGallery);
+    }
     await _logFGHeartBeatInfo(preferences);
     _logger.info("_logFGHeartBeatInfo done $tlog");
     unawaited(_scheduleHeartBeat(preferences, isBackground));
