@@ -6,7 +6,11 @@ plugins {
     id 'org.jetbrains.kotlin.plugin.serialization' version '2.2.20'
 }
 
-if (file("google-services.json").exists()) {
+def localOnlyBuildRequested = gradle.startParameter.taskNames.any {
+    it.toLowerCase().contains("localonly")
+}
+
+if (file("google-services.json").exists() && !localOnlyBuildRequested) {
     apply plugin: "com.google.gms.google-services"
 }
 
@@ -98,6 +102,10 @@ android {
         independent {
             dimension "default"
             applicationIdSuffix ".independent"
+        }
+        localOnly {
+            dimension "default"
+            applicationIdSuffix ".local"
         }
         dev {
             dimension "default"

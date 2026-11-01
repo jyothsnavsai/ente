@@ -131,6 +131,13 @@ MlDecryptionRecordStore get mlDecryptionRecordStore =>
 // access may still be used.
 bool get isLocalGalleryMode => localSettings.isLocalGalleryMode;
 
+bool isLocalOnlyPackage(String packageName) =>
+    packageName == "io.ente.photos.local" ||
+    packageName.startsWith("io.ente.photos.local.");
+
+bool get isLocalOnlyBuild =>
+    isLocalOnlyPackage(ServiceLocator.instance.packageInfo.packageName);
+
 bool get hasGrantedMLConsent {
   if (isLocalGalleryMode) {
     return localSettings.localGalleryMLConsent;
