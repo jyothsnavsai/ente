@@ -712,17 +712,37 @@ class _FileSelectionActionsWidgetState
       );
       controller.dispose();
       if (!mounted || name == null || name.trim().isEmpty) return;
-      final album = await LocalAlbumsService.instance.createAlbum(name.trim());
+      final LocalAlbum album;
+      try {
+        album = await LocalAlbumsService.instance.createAlbum(name.trim());
+      } catch (e, s) {
+        _logger.severe("Failed to create local album", e, s);
+        if (mounted) await showGenericErrorDialog(context: context, error: e);
+        return;
+      }
       resolvedAlbumID = album.id;
     } else {
       resolvedAlbumID = albumID;
     }
 
-    await LocalAlbumsService.instance.addFiles(
-      resolvedAlbumID,
-      widget.selectedFiles.files,
-    );
-    if (mounted) widget.selectedFiles.clearAll();
+    try {
+      final addedCount = await LocalAlbumsService.instance.addFiles(
+        resolvedAlbumID,
+        widget.selectedFiles.files,
+      );
+      if (!mounted) return;
+      if (addedCount == 0) {
+        showShortToast(
+          context,
+          context.strings.somethingWentWrongPleaseTryAgain,
+        );
+        return;
+      }
+      widget.selectedFiles.clearAll();
+    } catch (e, s) {
+      _logger.severe("Failed to add local photos to album", e, s);
+      if (mounted) await showGenericErrorDialog(context: context, error: e);
+    }
   }
 
   Future<void> _addToHiddenAlbum() async {

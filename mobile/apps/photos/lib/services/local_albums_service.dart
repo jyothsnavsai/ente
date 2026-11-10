@@ -24,7 +24,7 @@ class LocalAlbumsService {
     return album;
   }
 
-  Future<void> addFiles(int albumID, Iterable<EnteFile> files) async {
+  Future<int> addFiles(int albumID, Iterable<EnteFile> files) async {
     final localAlbumID = _collectionID(albumID);
     final filesByLocalID = <String, EnteFile>{};
     for (final file in files) {
@@ -33,7 +33,7 @@ class LocalAlbumsService {
         filesByLocalID.putIfAbsent(localID, () => file);
       }
     }
-    if (filesByLocalID.isEmpty) return;
+    if (filesByLocalID.isEmpty) return 0;
 
     await _albumsDB.addFiles(albumID, filesByLocalID.keys);
     final albumFiles = filesByLocalID.values
@@ -43,6 +43,7 @@ class LocalAlbumsService {
       CollectionUpdatedEvent(localAlbumID, albumFiles, "localAlbumAdd"),
     );
     Bus.instance.fire(FilesUpdatedEvent(albumFiles, source: "localAlbumAdd"));
+    return albumFiles.length;
   }
 
   Future<void> removeFiles(int albumID, Iterable<EnteFile> files) async {

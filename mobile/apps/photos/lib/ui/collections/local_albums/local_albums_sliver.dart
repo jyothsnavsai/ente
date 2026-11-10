@@ -2,6 +2,7 @@ import "dart:async";
 
 import "package:ente_strings/ente_strings.dart";
 import "package:flutter/material.dart";
+import "package:logging/logging.dart";
 import "package:photos/core/event_bus.dart";
 import "package:photos/db/local_albums_db.dart";
 import "package:photos/events/collection_updated_event.dart";
@@ -11,6 +12,7 @@ import "package:photos/services/local_albums_service.dart";
 import "package:photos/ui/viewer/gallery/empty_state.dart";
 import "package:photos/ui/viewer/gallery/gallery.dart";
 import "package:photos/ui/viewer/gallery/state/selection_state.dart";
+import "package:photos/ui/notification/toast.dart";
 
 class LocalAlbumsSliver extends StatefulWidget {
   const LocalAlbumsSliver({super.key});
@@ -20,6 +22,7 @@ class LocalAlbumsSliver extends StatefulWidget {
 }
 
 class _LocalAlbumsSliverState extends State<LocalAlbumsSliver> {
+  final _logger = Logger("LocalAlbumsSliver");
   late Future<List<LocalAlbum>> _albums = LocalAlbumsService.instance
       .getAlbums();
   late final StreamSubscription<CollectionUpdatedEvent>
@@ -114,10 +117,21 @@ class _LocalAlbumsSliverState extends State<LocalAlbumsSliver> {
     );
     controller.dispose();
     if (!mounted || name == null || name.trim().isEmpty) return;
-    await LocalAlbumsService.instance.createAlbum(name.trim());
-    setState(() {
-      _albums = LocalAlbumsService.instance.getAlbums();
-    });
+    try {
+      await LocalAlbumsService.instance.createAlbum(name.trim());
+      if (!mounted) return;
+      setState(() {
+        _albums = LocalAlbumsService.instance.getAlbums();
+      });
+    } catch (e, s) {
+      _logger.severe("Failed to create local album", e, s);
+      if (mounted) {
+        showShortToast(
+          context,
+          context.strings.somethingWentWrongPleaseTryAgain,
+        );
+      }
+    }
   }
 }
 
@@ -209,7 +223,7 @@ class _LocalAlbumPageState extends State<LocalAlbumPage> {
   Future<void> _moveSelectedFiles() async {
     final albums = await LocalAlbumsService.instance.getAlbums();
     if (!mounted) return;
-    final destination = await showModalBottomSheet<LocalAlbum>(
+    final destinationID = await showModalBottomSheet<int>(
       context: context,
       builder: (context) => SafeArea(
         child: ListView(
@@ -221,16 +235,74 @@ class _LocalAlbumPageState extends State<LocalAlbumPage> {
               ListTile(
                 leading: const Icon(Icons.photo_album_outlined),
                 title: Text(album.name),
-                onTap: () => Navigator.of(context).pop(album),
+                onTap: () => Navigator.of(context).pop(album.id),
               ),
+            ListTile(
+              leading: const Icon(Icons.add),
+              title: Text(context.strings.createAlbum),
+              onTap: () => Navigator.of(context).pop(0),
+            ),
           ],
         ),
       ),
     );
-    if (!mounted || destination == null) return;
+    if (!mounted || destinationID == null) return;
+
+    final int resolvedDestinationID;
+    if (destinationID == 0) {
+      final controller = TextEditingController();
+      final name = await showDialog<String>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(context.strings.createAlbum),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            textCapitalization: TextCapitalization.sentences,
+            decoration: InputDecoration(
+              hintText: context.strings.enterAlbumName,
+            ),
+            onSubmitted: (value) => Navigator.of(context).pop(value.trim()),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(context.strings.cancel),
+            ),
+            TextButton(
+              onPressed: () =>
+                  Navigator.of(context).pop(controller.text.trim()),
+              child: Text(context.strings.create),
+            ),
+          ],
+        ),
+      );
+      controller.dispose();
+      if (!mounted || name == null || name.trim().isEmpty) return;
+      try {
+        resolvedDestinationID = (await LocalAlbumsService.instance.createAlbum(
+          name.trim(),
+        )).id;
+      } catch (e, s) {
+        _logger.severe("Failed to create local album", e, s);
+        if (mounted) {
+          showShortToast(
+            context,
+            context.strings.somethingWentWrongPleaseTryAgain,
+          );
+        }
+        return;
+      }
+    } else {
+      resolvedDestinationID = destinationID;
+    }
 
     final files = _selectedFiles.files.toList();
-    await LocalAlbumsService.instance.addFiles(destination.id, files);
+    final addedCount = await LocalAlbumsService.instance.addFiles(
+      resolvedDestinationID,
+      files,
+    );
+    if (addedCount == 0) return;
     await LocalAlbumsService.instance.removeFiles(widget.album.id, files);
     _selectedFiles.clearAll();
   }

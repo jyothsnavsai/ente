@@ -42,7 +42,7 @@ Future<void> enableMLConsent() async {
   try {
     await MLService.instance.init();
     await SemanticSearchService.instance.init();
-    unawaited(MLService.instance.runAllML(force: true));
+    unawaited(MLService.instance.runAllML(force: !isLocalGalleryMode));
   } catch (e, s) {
     _logger.severe("Could not start machine learning after consent", e, s);
   }

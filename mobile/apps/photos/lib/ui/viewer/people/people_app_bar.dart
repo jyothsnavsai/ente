@@ -14,6 +14,7 @@ import 'package:photos/models/file/file.dart';
 import 'package:photos/models/gallery_type.dart';
 import "package:photos/models/ml/face/person.dart";
 import 'package:photos/models/selected_files.dart';
+import "package:photos/service_locator.dart" show isLocalGalleryMode;
 import 'package:photos/services/collections_service.dart';
 import "package:photos/services/machine_learning/face_ml/person/person_service.dart";
 import 'package:photos/ui/actions/collection/collection_sharing_actions.dart';
@@ -277,7 +278,8 @@ class _AppBarWidgetState extends State<PeopleAppBar> {
     final bool hasAssignedCluster = person.data.assigned.isNotEmpty;
     final List<Widget> actions = <Widget>[];
     if (widget.selectedFiles.files.isNotEmpty ||
-        !Configuration.instance.hasConfiguredAccount()) {
+        (!isLocalGalleryMode &&
+            !Configuration.instance.hasConfiguredAccount())) {
       return actions;
     }
 
@@ -334,7 +336,7 @@ class _AppBarWidgetState extends State<PeopleAppBar> {
             size: IconSizes.small,
           ),
         ),
-        if (hasAssignedCluster)
+        if (hasAssignedCluster && !isLocalGalleryMode)
           EntePopupMenuOption(
             value: PeoplePopupAction.reviewSuggestions,
             label: context.strings.review,
@@ -343,7 +345,7 @@ class _AppBarWidgetState extends State<PeopleAppBar> {
               size: IconSizes.small,
             ),
           ),
-        if (hasAssignedCluster)
+        if (hasAssignedCluster && !isLocalGalleryMode)
           EntePopupMenuOption(
             value: PeoplePopupAction.setCover,
             label: context.strings.setCover,
@@ -415,7 +417,7 @@ class _AppBarWidgetState extends State<PeopleAppBar> {
             size: IconSizes.small,
           ),
         ),
-        if (hasAssignedCluster)
+        if (hasAssignedCluster && !isLocalGalleryMode)
           EntePopupMenuOption(
             value: PeoplePopupAction.reviewSuggestions,
             label: context.strings.review,

@@ -320,11 +320,6 @@ class _GrantPermissionsWidgetState extends State<GrantPermissionsWidget>
     try {
       await localSettings.setAppMode(AppMode.localGallery);
       localSettings.localGalleryModeEnabledThisSession = true;
-      try {
-        await setMLConsent(true);
-      } catch (e) {
-        _logger.severe("Failed to record ML consent after permission grant", e);
-      }
       Bus.instance.fire(AppModeChangedEvent());
       await permissionService.onUpdatePermission(state);
       await localSettings.setLocalGalleryOnboardingPending(false);
@@ -335,9 +330,11 @@ class _GrantPermissionsWidgetState extends State<GrantPermissionsWidget>
     SyncService.instance.onPermissionGranted().ignore();
     Bus.instance.fire(PermissionGrantedEvent());
     try {
-      await MLService.instance.init();
-      await SemanticSearchService.instance.init();
-      unawaited(MLService.instance.runAllML(force: true));
+      if (hasGrantedMLConsent) {
+        await MLService.instance.init();
+        await SemanticSearchService.instance.init();
+        unawaited(MLService.instance.runAllML());
+      }
     } catch (e) {
       _logger.severe("Failed to initialize ML after permission grant", e);
     }
