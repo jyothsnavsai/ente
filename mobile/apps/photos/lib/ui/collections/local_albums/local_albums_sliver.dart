@@ -67,7 +67,7 @@ class _LocalAlbumsSliverState extends State<LocalAlbumsSliver> {
               else if (snapshot.connectionState == ConnectionState.waiting)
                 const LinearProgressIndicator()
               else if (albums.isEmpty)
-                ListTile(title: Text(context.strings.noAlbumsFound))
+                ListTile(title: Text(context.strings.nothingToSeeHere))
               else
                 for (final album in albums)
                   ListTile(
@@ -152,8 +152,9 @@ class _LocalAlbumPageState extends State<LocalAlbumPage> {
           selectedFiles: _selectedFiles,
           emptyState: const EmptyState(),
           reloadEvent: Bus.instance.on<FilesUpdatedEvent>().where(
-            (event) =>
-                event.files.any((file) => file.collectionID == collectionID),
+            (event) => event.updatedFiles.any(
+              (file) => file.collectionID == collectionID,
+            ),
           ),
           asyncLoader: (startTime, endTime, {limit, asc}) async {
             return LocalAlbumsService.instance.getFiles(

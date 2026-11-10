@@ -21,6 +21,7 @@ import "package:uuid/uuid.dart";
 
 class EntityService {
   static const int fetchLimit = 500;
+  static const _uuid = Uuid();
   final _logger = Logger((EntityService).toString());
   final SharedPreferences _prefs;
   final EntityGateway _gateway;
@@ -76,7 +77,7 @@ class EntityService {
     final String plainText = jsonEncode(jsonMap);
     if (_isLocalGalleryMode) {
       final localID = id == null
-          ? "local_${Uuid().v4()}"
+          ? "local_${_uuid.v4()}"
           : id.startsWith("local_")
           ? id
           : "local_$id";
