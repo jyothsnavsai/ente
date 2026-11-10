@@ -22,7 +22,6 @@ import "package:photos/services/machine_learning/face_ml/face_filtering/face_fil
 import "package:photos/services/search_service.dart";
 import "package:photos/settings/local_settings.dart";
 import "package:photos/theme/ente_theme.dart";
-import "package:photos/ui/components/banners/save_faces_banner.dart";
 import "package:photos/ui/components/bottom_action_bar/people_bottom_action_bar_widget.dart";
 import "package:photos/ui/components/collection_share_badge.dart";
 import "package:photos/ui/viewer/actions/select_all_status_icon.dart";
@@ -69,9 +68,8 @@ class _PeopleSectionAllPageState extends State<PeopleSectionAllPage> {
                 alignment: Alignment.bottomCenter,
                 children: [
                   ValueListenableBuilder<double?>(
-                    valueListenable: GalleryBoundariesProvider.of(
-                      context,
-                    )!.selectionSheetMinHeightNotifier,
+                    valueListenable: GalleryBoundariesProvider.of(context)!
+                        .selectionSheetMinHeightNotifier,
                     builder: (context, height, _) => Padding(
                       padding: EdgeInsets.only(
                         bottom: hasSelection
@@ -794,9 +792,6 @@ class _PeopleSectionAllWidgetState extends State<PeopleSectionAllWidget> {
             final showExtraFaces =
                 showAllFaces && filteredExtraFaces.isNotEmpty;
             slivers.addAll([
-              if (isLocalGalleryMode &&
-                  !Configuration.instance.hasConfiguredAccount())
-                const SliverToBoxAdapter(child: SaveFacesBanner()),
               (!userDismissedPersonGallerySuggestion &&
                       !widget.namedOnly &&
                       !_showingIgnoredPeople)
@@ -1159,9 +1154,8 @@ class _PeopleSectionAllWidgetState extends State<PeopleSectionAllWidget> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),
               side: BorderSide(
-                color: Theme.of(
-                  context,
-                ).colorScheme.outline.withValues(alpha: 0.3),
+                color: Theme.of(context).colorScheme.outline
+                    .withValues(alpha: 0.3),
                 width: 1,
               ),
             ),
@@ -1173,9 +1167,8 @@ class _PeopleSectionAllWidgetState extends State<PeopleSectionAllWidget> {
                 _showingAllFaces
                     ? context.strings.showLessFaces
                     : context.strings.showMoreFaces,
-                style: getEnteTextTheme(
-                  context,
-                ).small.copyWith(color: Theme.of(context).colorScheme.primary),
+                style: getEnteTextTheme(context).small
+                    .copyWith(color: Theme.of(context).colorScheme.primary),
               ),
               const SizedBox(width: 8),
               Icon(

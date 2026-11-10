@@ -112,6 +112,10 @@ class RemoteSyncService {
   }
 
   Future<void> sync({bool silently = false}) async {
+    if (isLocalGalleryMode) {
+      _logger.info("Skipping remote sync in local gallery mode");
+      return;
+    }
     if (!_config.hasConfiguredAccount()) {
       _logger.info("Skipping remote sync since account is not configured");
       return;

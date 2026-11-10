@@ -1,4 +1,5 @@
 import "package:flutter_test/flutter_test.dart";
+import "package:photos/app_mode.dart";
 import "package:photos/core/configuration.dart";
 import "package:photos/settings/local_settings.dart";
 import "package:photos/ui/viewer/gallery/component/group/type.dart";
@@ -13,6 +14,31 @@ void main() {
 
     expect(settings.getGalleryLayoutType(), GalleryLayoutType.grid);
     expect(settings.getPhotoGridSize(), 3);
+  });
+
+  test("unauthenticated installs default to local gallery mode", () async {
+    SharedPreferences.setMockInitialValues({});
+    var settings = LocalSettings(await SharedPreferences.getInstance());
+
+    expect(settings.isLocalGalleryMode, isTrue);
+    expect(settings.isLocalGalleryOnboardingPending, isTrue);
+
+    SharedPreferences.setMockInitialValues({Configuration.userIDKey: 1});
+    settings = LocalSettings(await SharedPreferences.getInstance());
+
+    expect(settings.isLocalGalleryMode, isFalse);
+    expect(settings.isLocalGalleryOnboardingPending, isFalse);
+  });
+
+  test("local gallery ML waits for user inactivity by default", () async {
+    SharedPreferences.setMockInitialValues({});
+    final settings = LocalSettings(await SharedPreferences.getInstance());
+    await settings.setAppMode(AppMode.localGallery);
+
+    expect(settings.runMLDuringInteractionOverride, isFalse);
+
+    await settings.setRunMLDuringInteractionOverride(true);
+    expect(settings.runMLDuringInteractionOverride, isTrue);
   });
 
   test(

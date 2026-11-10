@@ -36,6 +36,10 @@ class PushService {
   PushService._privateConstructor();
 
   Future<void> init({BackgroundPushHandler? onBackgroundPush}) async {
+    if (isLocalGalleryMode) {
+      _logger.info("Skipping push initialization in local gallery mode");
+      return;
+    }
     _prefs = await SharedPreferences.getInstance();
     await Firebase.initializeApp();
     if (Platform.isAndroid) {

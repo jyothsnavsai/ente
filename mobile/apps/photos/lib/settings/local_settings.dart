@@ -411,7 +411,7 @@ class LocalSettings {
   }
 
   bool get runMLDuringInteractionOverride =>
-      _prefs.getBool(_kRunMLDuringInteractionOverride) ?? isLocalGalleryMode;
+      _prefs.getBool(_kRunMLDuringInteractionOverride) ?? false;
 
   Future<void> setRunMLDuringInteractionOverride(bool value) async {
     await _prefs.setBool(_kRunMLDuringInteractionOverride, value);
@@ -621,7 +621,9 @@ class LocalSettings {
       return _cachedAppMode!;
     }
 
-    _cachedAppMode = AppMode.enteGallery;
+    _cachedAppMode = _prefs.containsKey(Configuration.userIDKey)
+        ? AppMode.enteGallery
+        : AppMode.localGallery;
     return _cachedAppMode!;
   }
 
@@ -640,7 +642,8 @@ class LocalSettings {
   }
 
   bool get isLocalGalleryOnboardingPending =>
-      _prefs.getBool(_kLocalGalleryOnboardingPending) ?? false;
+      _prefs.getBool(_kLocalGalleryOnboardingPending) ??
+      !_prefs.containsKey(Configuration.userIDKey);
 
   Future<void> setLocalGalleryOnboardingPending(bool value) async {
     await _prefs.setBool(_kLocalGalleryOnboardingPending, value);

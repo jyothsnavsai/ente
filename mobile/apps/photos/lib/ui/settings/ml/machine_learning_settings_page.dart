@@ -225,9 +225,8 @@ class _MachineLearningSettingsPageState
       rethrow;
     }
     if (!mounted) return;
-    Navigator.of(
-      context,
-    ).popUntil((route) => route.isFirst && !route.willHandlePopInternally);
+    Navigator.of(context)
+        .popUntil((route) => route.isFirst && !route.willHandlePopInternally);
     Bus.instance.fire(
       TabChangedEvent(searchTabIndex, TabChangedEventSource.mlConsent),
     );
@@ -291,7 +290,9 @@ class _MachineLearningSettingsPageState
               memoriesCacheService.queueUpdateCache();
               Bus.instance.fire(NotificationEvent());
               if (localIndexing) {
-                unawaited(MLService.instance.runAllML(force: true));
+                unawaited(
+                  MLService.instance.runAllML(force: !isLocalGalleryMode),
+                );
               } else {
                 MLService.instance.stopActiveRun(MlStopReason.manual);
                 unawaited(

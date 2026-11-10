@@ -805,6 +805,26 @@ class FilesDB with SqlDbBase {
     return files;
   }
 
+  Future<List<EnteFile>> getLocalFilesByIDs(Iterable<String> localIDs) async {
+    final uniqueLocalIDs = localIDs.toSet().toList();
+    if (uniqueLocalIDs.isEmpty) return [];
+    final db = await instance.sqliteAsyncDB;
+    final files = <EnteFile>[];
+    for (var start = 0; start < uniqueLocalIDs.length; start += 900) {
+      final end = (start + 900).clamp(0, uniqueLocalIDs.length);
+      final batch = uniqueLocalIDs.sublist(start, end);
+      final placeholders = List.filled(batch.length, '?').join(',');
+      final rows = await db.getAll(
+        'SELECT * FROM $filesTable WHERE $columnLocalID IN ($placeholders) '
+        'ORDER BY CASE WHEN $columnUploadedFileID IS NULL '
+        'OR $columnUploadedFileID = -1 THEN 0 ELSE 1 END',
+        batch,
+      );
+      files.addAll(convertToFiles(rows));
+    }
+    return deduplicateByLocalID(files);
+  }
+
   Future<List<EnteFile>> getAllFilesFromCollections(
     Iterable<int> collectionID,
   ) async {
