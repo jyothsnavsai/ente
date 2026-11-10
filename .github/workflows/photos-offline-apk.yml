@@ -59,13 +59,33 @@ jobs:
                   -dname "CN=CI Build, O=Ente Photos, C=US"
 
             - name: Build ARM APK
-              run: >-
-                  flutter build apk
-                  --build-name=1.0.0
-                  --build-number="${GITHUB_RUN_NUMBER}"
-                  --dart-define=cronetHttpNoPlay=true
-                  --release --flavor independent
-                  --target-platform android-arm,android-arm64
+              run: |
+                  build_args=(
+                      --build-name=1.0.0
+                      --build-number="${GITHUB_RUN_NUMBER}"
+                      --dart-define=cronetHttpNoPlay=true
+                      --release --flavor independent
+                      --target-platform android-arm,android-arm64
+                  )
+                  build_log="$RUNNER_TEMP/photos-apk-build.log"
+                  for attempt in 1 2; do
+                      set +e
+                      flutter build apk "${build_args[@]}" 2>&1 | tee "$build_log"
+                      build_status="${PIPESTATUS[0]}"
+                      set -e
+                      if [[ "$build_status" -eq 0 ]]; then
+                          exit 0
+                      fi
+                      if ! grep -Fq "Error on ZipFile unknown archive" "$build_log" || [[ "$attempt" -eq 2 ]]; then
+                          exit "$build_status"
+                      fi
+                      sdk_root="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
+                      if [[ -z "$sdk_root" ]]; then
+                          exit "$build_status"
+                      fi
+                      rm -rf "$sdk_root/platforms/android-33"
+                      echo "Retrying after a corrupted Android SDK Platform 33 archive"
+                  done
               env:
                   SIGNING_KEY_PATH: ${{ runner.temp }}/photos-ci.jks
                   SIGNING_KEY_ALIAS: photos-ci
