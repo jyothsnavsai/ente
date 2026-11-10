@@ -26,8 +26,7 @@ class EntityService {
   final EntityGateway _gateway;
   final _config = Configuration.instance;
   late final FilesDB _db = FilesDB.instance;
-  bool get _isLocalGalleryMode =>
-      LocalSettings(_prefs).isLocalGalleryMode;
+  bool get _isLocalGalleryMode => LocalSettings(_prefs).isLocalGalleryMode;
 
   EntityService(this._prefs, this._gateway) {
     debugPrint("EntityService constructor");

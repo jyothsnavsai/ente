@@ -152,9 +152,8 @@ class _LocalAlbumPageState extends State<LocalAlbumPage> {
           selectedFiles: _selectedFiles,
           emptyState: const EmptyState(),
           reloadEvent: Bus.instance.on<FilesUpdatedEvent>().where(
-            (event) => event.files.any(
-              (file) => file.collectionID == collectionID,
-            ),
+            (event) =>
+                event.files.any((file) => file.collectionID == collectionID),
           ),
           asyncLoader: (startTime, endTime, {limit, asc}) async {
             return LocalAlbumsService.instance.getFiles(

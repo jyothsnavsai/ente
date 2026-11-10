@@ -622,8 +622,8 @@ class LocalSettings {
     }
 
     _cachedAppMode = _prefs.containsKey(Configuration.userIDKey)
-      ? AppMode.enteGallery
-      : AppMode.localGallery;
+        ? AppMode.enteGallery
+        : AppMode.localGallery;
     return _cachedAppMode!;
   }
 

@@ -5,14 +5,14 @@ on:
         branches:
             - main
         paths:
+            - ".github/workflows/photos-offline-apk.yml"
             - "mobile/**"
             - "rust/**"
-            - ".github/workflows/photos-offline-apk.yml"
     pull_request:
-      paths:
-        - "mobile/**"
-        - "rust/**"
-        - ".github/workflows/photos-offline-apk.yml"
+        paths:
+            - ".github/workflows/photos-offline-apk.yml"
+            - "mobile/**"
+            - "rust/**"
     workflow_dispatch:
 
 permissions:

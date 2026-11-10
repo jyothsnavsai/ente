@@ -79,19 +79,18 @@ class LocalAlbumsDB with SqlDbBase {
 
   Future<void> renameAlbum(int albumID, String name) async {
     final db = await database;
-    await db.execute(
-      "UPDATE $albumsTable SET name = ? WHERE id = ?",
-      [name, albumID],
-    );
+    await db.execute("UPDATE $albumsTable SET name = ? WHERE id = ?", [
+      name,
+      albumID,
+    ]);
   }
 
   Future<void> deleteAlbum(int albumID) async {
     final db = await database;
     await db.writeTransaction((tx) async {
-      await tx.execute(
-        "DELETE FROM $albumFilesTable WHERE album_id = ?",
-        [albumID],
-      );
+      await tx.execute("DELETE FROM $albumFilesTable WHERE album_id = ?", [
+        albumID,
+      ]);
       await tx.execute("DELETE FROM $albumsTable WHERE id = ?", [albumID]);
     });
   }
@@ -102,7 +101,9 @@ class LocalAlbumsDB with SqlDbBase {
     if (uniqueLocalIDs.isEmpty) return;
     await db.executeBatch(
       "INSERT OR IGNORE INTO $albumFilesTable (album_id, local_id) VALUES (?, ?)",
-      [for (final localID in uniqueLocalIDs) [albumID, localID]],
+      [
+        for (final localID in uniqueLocalIDs) [albumID, localID],
+      ],
     );
   }
 
@@ -112,7 +113,9 @@ class LocalAlbumsDB with SqlDbBase {
     if (uniqueLocalIDs.isEmpty) return;
     await db.executeBatch(
       "DELETE FROM $albumFilesTable WHERE album_id = ? AND local_id = ?",
-      [for (final localID in uniqueLocalIDs) [albumID, localID]],
+      [
+        for (final localID in uniqueLocalIDs) [albumID, localID],
+      ],
     );
   }
 

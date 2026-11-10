@@ -716,12 +716,12 @@ Future runWithLogs(
       body: function,
       logDirPath: (await getApplicationSupportDirectory()).path + "/logs",
       maxLogFiles: 5,
-        sentryDsn: isLocalGallery
+      sentryDsn: isLocalGallery
           ? null
           : kDebugMode
           ? sentryDebugDSN
           : sentryDSN,
-        tunnel: isLocalGallery ? null : sentryTunnel,
+      tunnel: isLocalGallery ? null : sentryTunnel,
       sentryInitTimeout: sentryInitTimeout,
       enableInDebugMode: true,
       prefix: prefix,
