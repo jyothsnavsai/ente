@@ -64,6 +64,7 @@ import 'package:photos/services/sync/local_sync_service.dart';
 import 'package:photos/services/sync/remote_sync_service.dart';
 import "package:photos/services/sync/sync_service.dart";
 import "package:photos/services/video_preview_service.dart";
+import "package:photos/settings/local_settings.dart";
 import "package:photos/src/rust/api/log.dart" as photos_rust_log;
 import "package:photos/src/rust/frb_generated.dart";
 import 'package:photos/ui/wallpaper/wallpaper_page.dart';
@@ -580,7 +581,11 @@ Future<void> _init(
       await _scheduleFGHomeWidgetSync();
     }
 
-    PushService.instance.init(onBackgroundPush: _handleBackgroundPush).ignore();
+    if (!isLocalGalleryMode) {
+      PushService.instance
+          .init(onBackgroundPush: _handleBackgroundPush)
+          .ignore();
+    }
     _logger.info("PushService/HomeWidget done $tlog");
     unawaited(MLService.instance.init());
     try {
@@ -704,13 +709,19 @@ Future runWithLogs(
   String prefix = "",
   Duration? sentryInitTimeout,
 }) async {
+  final preferences = await SharedPreferences.getInstance();
+  final isLocalGallery = LocalSettings(preferences).isLocalGalleryMode;
   await SuperLogging.main(
     LogConfig(
       body: function,
       logDirPath: (await getApplicationSupportDirectory()).path + "/logs",
       maxLogFiles: 5,
-      sentryDsn: kDebugMode ? sentryDebugDSN : sentryDSN,
-      tunnel: sentryTunnel,
+        sentryDsn: isLocalGallery
+          ? null
+          : kDebugMode
+          ? sentryDebugDSN
+          : sentryDSN,
+        tunnel: isLocalGallery ? null : sentryTunnel,
       sentryInitTimeout: sentryInitTimeout,
       enableInDebugMode: true,
       prefix: prefix,

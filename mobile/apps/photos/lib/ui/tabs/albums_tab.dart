@@ -30,6 +30,7 @@ import "package:photos/theme/ente_theme.dart";
 import "package:photos/ui/collections/collection_list_page.dart";
 import "package:photos/ui/collections/device/device_folders_vertical_grid_view.dart";
 import "package:photos/ui/collections/flex_grid_view.dart";
+import "package:photos/ui/collections/local_albums/local_albums_sliver.dart";
 import "package:photos/ui/components/empty_state_component.dart";
 import "package:photos/ui/tabs/albums/albums_manage_sheet.dart";
 import "package:photos/ui/tabs/albums/empty_states/on_ente_empty_state.dart";
@@ -666,12 +667,17 @@ class _AlbumsTabState extends State<AlbumsTab>
         showCreateAlbum = false;
         emptyState = const ReceivedEmptyState();
       case _AlbumsFilter.onDevice:
-        return DeviceFolderVerticalGridSliver(
-          searchQuery: _searchQuery.trim(),
-          albumViewType: _viewType.value,
-          sortKey: _sortKey.value,
-          sortDirection: _sortDirection.value,
-          bottomPadding: _kContentBottomPadding,
+        return SliverMainAxisGroup(
+          slivers: [
+            if (isLocalGalleryMode) const LocalAlbumsSliver(),
+            DeviceFolderVerticalGridSliver(
+              searchQuery: _searchQuery.trim(),
+              albumViewType: _viewType.value,
+              sortKey: _sortKey.value,
+              sortDirection: _sortDirection.value,
+              bottomPadding: _kContentBottomPadding,
+            ),
+          ],
         );
     }
     if (collections == null) {

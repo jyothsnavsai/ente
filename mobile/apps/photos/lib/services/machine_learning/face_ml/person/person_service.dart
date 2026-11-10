@@ -10,6 +10,7 @@ import "package:logging/logging.dart";
 import "package:photos/core/configuration.dart";
 import "package:photos/core/event_bus.dart";
 import "package:photos/db/ml/base.dart";
+import "package:photos/db/ml/db.dart";
 import "package:photos/events/diff_sync_complete_event.dart";
 import "package:photos/events/people_changed_event.dart";
 import "package:photos/gateways/entity/models/type.dart";
@@ -97,7 +98,11 @@ class PersonService {
     SharedPreferences prefs,
   ) {
     final bool isFirstInit = _instance == null;
-    _instance = PersonService(entityService, faceMLDataDB, prefs);
+    _instance = PersonService(
+      entityService,
+      isLocalGalleryMode ? MLDataDB.localGalleryInstance : faceMLDataDB,
+      prefs,
+    );
     if (isFirstInit) {
       Bus.instance.on<DiffSyncCompleteEvent>().listen((event) {
         unawaited(instance.sync());

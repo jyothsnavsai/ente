@@ -15,6 +15,20 @@ void main() {
     expect(settings.getPhotoGridSize(), 3);
   });
 
+  test("unauthenticated installs default to local gallery mode", () async {
+    SharedPreferences.setMockInitialValues({});
+    var settings = LocalSettings(await SharedPreferences.getInstance());
+
+    expect(settings.isLocalGalleryMode, isTrue);
+    expect(settings.isLocalGalleryOnboardingPending, isTrue);
+
+    SharedPreferences.setMockInitialValues({Configuration.userIDKey: 1});
+    settings = LocalSettings(await SharedPreferences.getInstance());
+
+    expect(settings.isLocalGalleryMode, isFalse);
+    expect(settings.isLocalGalleryOnboardingPending, isFalse);
+  });
+
   test(
     "migrates the two-column preference without changing other settings",
     () async {

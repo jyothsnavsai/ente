@@ -48,7 +48,8 @@ class ClusterFeedbackService<T> {
   static const int _allPeopleSuggestionVectorResultCount = 120;
 
   ClusterFeedbackService._privateConstructor();
-  late final mlDataDB = MLDataDB.instance;
+  IMLDataDB<int> get mlDataDB =>
+      isLocalGalleryMode ? MLDataDB.localGalleryInstance : MLDataDB.instance;
   // Person suggestions belong to the Ente account, not the local gallery.
   IMLDataDB<int> get _mlDataDBForCentroidVectorDb => MLDataDB.instance;
   ClusterCentroidVectorDB get _clusterCentroidVectorDB =>

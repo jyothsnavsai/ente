@@ -31,6 +31,7 @@ import 'package:photos/module/download/gallery.dart';
 import "package:photos/service_locator.dart";
 import 'package:photos/services/collections_service.dart';
 import 'package:photos/services/hidden_service.dart';
+import "package:photos/services/local_albums_service.dart";
 import 'package:photos/services/machine_learning/face_ml/feedback/cluster_feedback.dart';
 import "package:photos/services/machine_learning/face_ml/person/person_service.dart";
 import "package:photos/theme/colors.dart";
@@ -254,8 +255,17 @@ class _FileSelectionActionsWidgetState
       final showUploadIcon =
           widget.type == GalleryType.localFolder &&
           split.ownedByCurrentUser.isEmpty;
-      if (widget.type.showAddToAlbum() && !isLocalGalleryMode) {
-        if (showUploadIcon) {
+      if (widget.type.showAddToAlbum()) {
+        if (isLocalGalleryMode) {
+          items.add(
+            SelectionSheetAction(
+              hugeIcon: HugeIcons.strokeRoundedImageAdd01,
+              labelText: context.strings.addToAlbum,
+              gridOrder: 4,
+              onTap: _addToLocalAlbum,
+            ),
+          );
+        } else if (showUploadIcon) {
           items.add(
             SelectionSheetAction(
               hugeIcon: HugeIcons.strokeRoundedCloudUpload,
@@ -643,6 +653,76 @@ class _FileSelectionActionsWidgetState
       context,
       selectedFiles: widget.selectedFiles,
     );
+  }
+
+  Future<void> _addToLocalAlbum() async {
+    final albums = await LocalAlbumsService.instance.getAlbums();
+    if (!mounted) return;
+    final albumID = await showModalBottomSheet<int>(
+      context: context,
+      builder: (context) => SafeArea(
+        child: ListView(
+          shrinkWrap: true,
+          children: [
+            for (final album in albums)
+              ListTile(
+                leading: const Icon(Icons.photo_album_outlined),
+                title: Text(album.name),
+                onTap: () => Navigator.of(context).pop(album.id),
+              ),
+            ListTile(
+              leading: const Icon(Icons.add),
+              title: Text(context.strings.createAlbum),
+              onTap: () => Navigator.of(context).pop(0),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (!mounted || albumID == null) return;
+
+    final int resolvedAlbumID;
+    if (albumID == 0) {
+      final controller = TextEditingController();
+      final name = await showDialog<String>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(context.strings.createAlbum),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            textCapitalization: TextCapitalization.sentences,
+            decoration: InputDecoration(
+              hintText: context.strings.enterAlbumName,
+            ),
+            onSubmitted: (value) => Navigator.of(context).pop(value.trim()),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(context.strings.cancel),
+            ),
+            TextButton(
+              onPressed: () =>
+                  Navigator.of(context).pop(controller.text.trim()),
+              child: Text(context.strings.create),
+            ),
+          ],
+        ),
+      );
+      controller.dispose();
+      if (!mounted || name == null || name.trim().isEmpty) return;
+      final album = await LocalAlbumsService.instance.createAlbum(name.trim());
+      resolvedAlbumID = album.id;
+    } else {
+      resolvedAlbumID = albumID;
+    }
+
+    await LocalAlbumsService.instance.addFiles(
+      resolvedAlbumID,
+      widget.selectedFiles.files,
+    );
+    if (mounted) widget.selectedFiles.clearAll();
   }
 
   Future<void> _addToHiddenAlbum() async {

@@ -1046,7 +1046,9 @@ class _HomeWidgetState extends State<HomeWidget> {
           hasPersistedLocalGalleryMode &&
           permissionService.hasGrantedPermissions();
       final shouldUseLocalGalleryEntryFlow =
-          _startWithoutAccount || canResumePersistedLocalGalleryMode;
+          localGalleryMode ||
+          _startWithoutAccount ||
+          canResumePersistedLocalGalleryMode;
 
       if (shouldBootstrapLocalGalleryEntryFlow) {
         return const GrantPermissionsWidget(startWithoutAccount: true);

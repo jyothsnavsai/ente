@@ -14,8 +14,10 @@ import "package:photos/gateways/entity/models/data.dart";
 import "package:photos/gateways/entity/models/key.dart";
 import "package:photos/gateways/entity/models/type.dart";
 import "package:photos/models/local_entity_data.dart";
+import "package:photos/settings/local_settings.dart";
 import "package:photos/utils/gzip.dart";
 import 'package:shared_preferences/shared_preferences.dart';
+import "package:uuid/uuid.dart";
 
 class EntityService {
   static const int fetchLimit = 500;
@@ -24,6 +26,8 @@ class EntityService {
   final EntityGateway _gateway;
   final _config = Configuration.instance;
   late final FilesDB _db = FilesDB.instance;
+  bool get _isLocalGalleryMode =>
+      LocalSettings(_prefs).isLocalGalleryMode;
 
   EntityService(this._prefs, this._gateway) {
     debugPrint("EntityService constructor");
@@ -45,15 +49,22 @@ class EntityService {
     EntityType type,
     List<String> ids,
   ) async {
-    return await _db.getCertainEntities(type, ids);
+    final entities = await _db.getCertainEntities(type, ids);
+    return _isLocalGalleryMode
+        ? entities.where((entity) => entity.ownerID == 0).toList()
+        : entities;
   }
 
   Future<List<LocalEntityData>> getEntities(EntityType type) async {
-    return await _db.getEntities(type);
+    final entities = await _db.getEntities(type);
+    return _isLocalGalleryMode
+        ? entities.where((entity) => entity.ownerID == 0).toList()
+        : entities;
   }
 
   Future<LocalEntityData?> getEntity(EntityType type, String id) async {
-    return await _db.getEntity(type, id);
+    final entity = await _db.getEntity(type, id);
+    return _isLocalGalleryMode && entity?.ownerID != 0 ? null : entity;
   }
 
   Future<LocalEntityData> addOrUpdate(
@@ -64,6 +75,22 @@ class EntityService {
     int? expectedUpdatedAt,
   }) async {
     final String plainText = jsonEncode(jsonMap);
+    if (_isLocalGalleryMode) {
+      final localID = id == null
+          ? "local_${Uuid().v4()}"
+          : id.startsWith("local_")
+          ? id
+          : "local_$id";
+      final localData = LocalEntityData(
+        id: localID,
+        type: type,
+        data: plainText,
+        ownerID: 0,
+        updatedAt: DateTime.now().millisecondsSinceEpoch,
+      );
+      await _db.upsertEntities([localData]);
+      return localData;
+    }
     final key = await getOrCreateEntityKey(type);
     late String encryptedData, header;
     if (type.isZipped) {
@@ -108,11 +135,22 @@ class EntityService {
   }
 
   Future<void> deleteEntry(String id) async {
+    if (_isLocalGalleryMode) {
+      for (final type in EntityType.values) {
+        final entity = await _db.getEntity(type, id);
+        if (entity?.ownerID == 0) {
+          await _db.deleteEntities([id]);
+          return;
+        }
+      }
+      return;
+    }
     await _gateway.deleteEntity(id);
     await _db.deleteEntities([id]);
   }
 
   Future<void> syncEntities() async {
+    if (_isLocalGalleryMode) return;
     try {
       await _remoteToLocalSync(EntityType.location);
       await _remoteToLocalSync(EntityType.cgroup);
@@ -123,6 +161,7 @@ class EntityService {
   }
 
   Future<int> syncEntity(EntityType type) async {
+    if (_isLocalGalleryMode) return 0;
     try {
       return await _remoteToLocalSync(type);
     } catch (e) {
@@ -139,6 +178,7 @@ class EntityService {
     EntityType type, {
     int prevFetchCount = 0,
   }) async {
+    if (_isLocalGalleryMode) return prevFetchCount;
     final int lastSyncTime =
         _prefs.getInt(_getEntityLastSyncTimePrefix(type)) ?? 0;
     final List<EntityData> result = await _gateway.getDiff(
@@ -212,6 +252,9 @@ class EntityService {
   }
 
   Future<Uint8List> getOrCreateEntityKey(EntityType type) async {
+    if (_isLocalGalleryMode) {
+      throw StateError("Entity keys are unavailable in local gallery mode");
+    }
     late String encryptedKey;
     late String header;
     try {

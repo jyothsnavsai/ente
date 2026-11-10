@@ -1,0 +1,81 @@
+name: Build Offline Photos APK
+
+on:
+    push:
+        branches:
+            - main
+        paths:
+            - "mobile/**"
+            - "rust/**"
+            - ".github/workflows/photos-offline-apk.yml"
+    pull_request:
+      paths:
+        - "mobile/**"
+        - "rust/**"
+        - ".github/workflows/photos-offline-apk.yml"
+    workflow_dispatch:
+
+permissions:
+    contents: read
+
+concurrency:
+    group: photos-offline-apk-${{ github.ref }}
+    cancel-in-progress: true
+
+jobs:
+    build-apk:
+        runs-on: ubuntu-latest
+        defaults:
+            run:
+                working-directory: mobile/apps/photos
+        steps:
+            - name: Checkout code and submodules
+              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+              with:
+                  submodules: recursive
+
+            - name: Setup JDK 17
+              uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+              with:
+                  distribution: temurin
+                  java-version: "17"
+
+            - name: Install Flutter
+              uses: $/.github/actions/setup-flutter
+
+            - name: Resolve Flutter dependencies
+              run: flutter pub get --enforce-lockfile
+
+            - name: Generate Photos Rust bindings
+              run: cargo codegen frb photos
+              working-directory: rust
+
+            - name: Create temporary APK signing key
+              run: >-
+                  keytool -genkeypair -v
+                  -keystore "$RUNNER_TEMP/photos-ci.jks"
+                  -storepass android -keypass android
+                  -alias photos-ci -keyalg RSA -keysize 2048 -validity 2
+                  -dname "CN=CI Build, O=Ente Photos, C=US"
+
+            - name: Build ARM APK
+              run: >-
+                  flutter build apk
+                  --build-name=1.0.0
+                  --build-number="${GITHUB_RUN_NUMBER}"
+                  --dart-define=cronetHttpNoPlay=true
+                  --release --flavor independent
+                  --target-platform android-arm,android-arm64
+              env:
+                  SIGNING_KEY_PATH: ${{ runner.temp }}/photos-ci.jks
+                  SIGNING_KEY_ALIAS: photos-ci
+                  SIGNING_KEY_PASSWORD: android
+                  SIGNING_STORE_PASSWORD: android
+
+            - name: Upload APK artifact
+              uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+              with:
+                  name: ente-photos-offline-${{ github.run_number }}
+                  path: mobile/apps/photos/build/app/outputs/flutter-apk/app-independent-release.apk
+                  if-no-files-found: error
+                  retention-days: 7
